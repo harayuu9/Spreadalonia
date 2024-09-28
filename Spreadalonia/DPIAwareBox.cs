@@ -58,28 +58,31 @@ namespace Spreadalonia
 
             if (scaling != lastScaling)
             {
-                if (cachedControls.TryGetValue(lastScaling, out Control lastControl))
+                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    lastControl.IsVisible = false;
-                }
+                    if (cachedControls.TryGetValue(lastScaling, out Control lastControl))
+                    {
+                        lastControl.IsVisible = false;
+                    }
 
-                if (cachedControls.TryGetValue(scaling, out Control control))
-                {
-                    control.IsVisible = true;
-                }
-                else
-                {
-                    control = this.GetControlAtResolution(scaling);
-                    control.IsVisible = true;
-                    container.Children.Add(control);
+                    if (cachedControls.TryGetValue(scaling, out Control control))
+                    {
+                        control.IsVisible = true;
+                    }
+                    else
+                    {
+                        control = this.GetControlAtResolution(scaling);
+                        control.IsVisible = true;
+                        container.Children.Add(control);
 
-                    cachedControls[scaling] = control;
-                }
+                        cachedControls[scaling] = control;
+                    }
 
 
-                lastScaling = scaling;
-
-                Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => { this.InvalidateVisual(); });
+                    lastScaling = scaling;
+                    
+                    this.InvalidateVisual();
+                });
             }
 
             base.Render(context);

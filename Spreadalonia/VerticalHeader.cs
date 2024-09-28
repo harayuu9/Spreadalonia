@@ -25,6 +25,7 @@ using Avalonia.Media;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Globalization;
 
 namespace Spreadalonia
 {
@@ -429,10 +430,17 @@ namespace Spreadalonia
                         margin = Owner.DefaultMargin;
                     }
 
-                    FormattedText fmtText = new FormattedText(kvp.Value, face, this.Container.FontSize, TextAlignment.Left, TextWrapping.NoWrap, new Size(double.PositiveInfinity, double.PositiveInfinity));
-
+                    FormattedText fmtText = new FormattedText(
+                        kvp.Value,
+                        CultureInfo.CurrentCulture,
+                        FlowDirection.LeftToRight,
+                        face,
+                        this.Container.FontSize,
+                        Brushes.Black  // または適切な色のブラシを指定
+                    );
+                    
                     found = true;
-                    maxHeight = Math.Max(maxHeight, fmtText.Bounds.Height + margin.Top + margin.Bottom);
+                    maxHeight = Math.Max(maxHeight, fmtText.Height + margin.Top + margin.Bottom);
                 }
             }
 
@@ -519,10 +527,17 @@ namespace Spreadalonia
                         margin = Owner.DefaultMargin;
                     }
 
-                    FormattedText fmtText = new FormattedText(kvp.Value, face, this.Container.FontSize, TextAlignment.Left, TextWrapping.NoWrap, new Size(double.PositiveInfinity, double.PositiveInfinity));
+                    FormattedText fmtText = new FormattedText(
+                        kvp.Value,
+                        CultureInfo.CurrentCulture,
+                        FlowDirection.LeftToRight,
+                        face,
+                        this.Container.FontSize,
+                        Brushes.Black // または適切な色のブラシを指定
+                    );
 
                     found = true;
-                    maxHeight = Math.Max(maxHeight, fmtText.Bounds.Height + margin.Top + margin.Bottom);
+                    maxHeight = Math.Max(maxHeight, fmtText.Height + margin.Top + margin.Bottom);
                 }
             }
 
@@ -561,11 +576,16 @@ namespace Spreadalonia
 
             string max = new string('9', (int)Math.Ceiling(Math.Log10(top + height)));
 
-            FormattedText fmt = new FormattedText(max, new Typeface(this.FontFamily), this.FontSize, TextAlignment.Left, TextWrapping.NoWrap, new Size(double.PositiveInfinity, double.PositiveInfinity));
+            FormattedText fmt = new FormattedText(max, 
+                CultureInfo.CurrentCulture, 
+                FlowDirection.LeftToRight,
+                new Typeface(this.FontFamily),
+                this.FontSize,
+                Brushes.Black);
 
             if (this.FontFamily != null)
             {
-                return new Size(fmt.Bounds.Width + 10, availableSize.Height);
+                return new Size(fmt.Width + 10, availableSize.Height);
             }
             else
             {
@@ -573,9 +593,9 @@ namespace Spreadalonia
             }
         }
 
-        protected override void OnPointerLeave(PointerEventArgs e)
+        protected override void OnPointerExited(PointerEventArgs e)
         {
-            base.OnPointerLeave(e);
+            base.OnPointerExited(e);
 
             if (hoverRow >= 0)
             {
@@ -612,7 +632,7 @@ namespace Spreadalonia
 
             Typeface typeFace = new Typeface(this.FontFamily, this.FontStyle, this.FontWeight);
 
-            using (context.PushPreTransform(Matrix.CreateTranslation(0, offsetY)))
+            using (context.PushTransform(Matrix.CreateTranslation(0, offsetY)))
             {
                 double[] ys = new double[height + 1];
 
@@ -677,20 +697,34 @@ namespace Spreadalonia
                     string txt = (y + top + 1).ToString();
 
                     double realY = y == 0 ? 0 : ys[y - 1];
-
-                    FormattedText fmtText = new FormattedText(txt, typeFace, this.FontSize, TextAlignment.Left, TextWrapping.NoWrap, new Size(double.PositiveInfinity, ys[y] - realY - 6));
-
+                    
                     using (context.PushClip(new Rect(3, realY + 3, this.Bounds.Width, ys[y] - realY - 6)))
                     {
-                        double realX = (this.Bounds.Width - fmtText.Bounds.Width) * 0.5;
-
                         if (selected[y] == 0)
                         {
-                            context.DrawText(brs, new Point(realX, realY + (ys[y] - realY) * 0.5 - fmtText.Bounds.Height * 0.5), fmtText);
+                            FormattedText fmtText = new FormattedText(
+                                txt,
+                                CultureInfo.CurrentCulture,
+                                FlowDirection.LeftToRight,
+                                typeFace, 
+                                this.FontSize,
+                                brs);
+
+                            double realX = (this.Bounds.Width - fmtText.Width) * 0.5;
+                            context.DrawText(fmtText, new Point(realX, realY + (ys[y] - realY) * 0.5 - fmtText.Height * 0.5));
                         }
                         else
                         {
-                            context.DrawText(SelectionAccent, new Point(realX, realY + (ys[y] - realY) * 0.5 - fmtText.Bounds.Height * 0.5), fmtText);
+                            FormattedText fmtText = new FormattedText(
+                                txt,
+                                CultureInfo.CurrentCulture,
+                                FlowDirection.LeftToRight,
+                                typeFace, 
+                                this.FontSize,
+                                SelectionAccent);
+
+                            double realX = (this.Bounds.Width - fmtText.Width) * 0.5;
+                            context.DrawText(fmtText, new Point(realX, realY + (ys[y] - realY) * 0.5 - fmtText.Height * 0.5));
                         }
 
                     }
